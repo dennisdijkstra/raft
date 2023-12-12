@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/raft"
+	raftmdb "github.com/hashicorp/raft-mdb"
 )
 
 type kvFsm struct {
@@ -38,6 +39,14 @@ func (kf *kvFsm) Snapshot() (raft.FSMSnapshot, error) {
 }
 
 func setupRaft(dir string, nodeId int, raftAddress string, kvFsm *kvFsm) (*raft.Raft, error) {
+	config := raft.DefaultConfig()
+	config.LocalID = raft.ServerID(nodeId)
+
+	store, err := raftmdb.NewMDBStore(dir)
+	if err != nil {
+		return nil, fmt.Errorf("Could not create MDB store: %s", err)
+	}
+
 	snapshots, err := raft.NewFileSnapshotStore(path.Join(dir, "snapshot"), 2, os.Stderr)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create snapshot store: %s", err)
@@ -53,10 +62,7 @@ func setupRaft(dir string, nodeId int, raftAddress string, kvFsm *kvFsm) (*raft.
 		return nil, fmt.Errorf("Could not create tcp transport: %s", err)
 	}
 
-	config := raft.DefaultConfig()
-	config.LocalID = raft.ServerID(nodeId)
-
-	r, err := raft.NewRaft(config, kvFsm, logs, store, snapshots, transport)
+	r, err := raft.NewRaft(config, kvFsm, store, store, snapshots, transport)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create raft instance: %s", err)
 	}
