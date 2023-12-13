@@ -21,8 +21,12 @@ type kvFsm struct {
 
 type snapshotNoop struct{}
 
-func (sn snapshotNoop) Persist(_ raft.SnapshotSink) error { return nil }
-func (sn snapshotNoop) Release()
+func (sn snapshotNoop) Persist(_ raft.SnapshotSink) error {
+	return nil
+}
+func (sn snapshotNoop) Release() {
+	return
+}
 
 func (kv *kvFsm) Apply(log *raft.Log) any {
 
