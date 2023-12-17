@@ -30,12 +30,16 @@ func (sn snapshotNoop) Release() {
 
 func (kv *kvFsm) Apply(log *raft.Log) any {
 
-	fmt.Println("Apply")
+	fmt.Println(log.Type)
+
+	// Store key value pair in raft mdb
 	return true
 }
 
-func (kv *kvFsm) Restore(io.ReadCloser) error {
-	fmt.Println("Restore")
+func (kv *kvFsm) Restore(rc io.ReadCloser) error {
+	fmt.Println(rc)
+
+	// Loop through and (re)store all key value pairs in raft mdb
 	return nil
 }
 
